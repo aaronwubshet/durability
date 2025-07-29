@@ -5,7 +5,7 @@ struct HealthKitDashboardView: View {
     @ObservedObject var appState: AppState
     @State private var healthData: HealthData = HealthData()
     @State private var isAuthorized = false
-    @State private var showingAuthorization = false
+    @State private var healthKitError: String? = nil
     @State private var selectedTimeRange: TimeRange = .week
     
     var body: some View {
@@ -17,6 +17,12 @@ struct HealthKitDashboardView: View {
                         isAuthorized: isAuthorized,
                         onRequestAccess: requestHealthKitAccess
                     )
+                    
+                    if let error = healthKitError {
+                        Text(error)
+                            .foregroundColor(.red)
+                            .padding()
+                    }
                     
                     if isAuthorized {
                         // Time range selector
@@ -47,26 +53,38 @@ struct HealthKitDashboardView: View {
         .onAppear {
             checkHealthKitAuthorization()
         }
-        .sheet(isPresented: $showingAuthorization) {
-            HealthKitAuthorizationView(onAuthorized: {
-                isAuthorized = true
-                loadHealthData()
-            })
-        }
     }
     
     private func checkHealthKitAuthorization() {
-        // Simulate HealthKit authorization check
-        isAuthorized = false
+        // Reset error state
+        healthKitError = nil
+        
+        if HealthKitManager.shared.checkAvailability() {
+            HealthKitManager.shared.requestAuthorization { success, error in
+                DispatchQueue.main.async {
+                    self.isAuthorized = success
+                    if success {
+                        self.loadHealthData()
+                    } else {
+                        self.healthKitError = error?.localizedDescription ?? "HealthKit authorization denied."
+                    }
+                }
+            }
+        } else {
+            healthKitError = "HealthKit is not available on this device."
+        }
     }
     
     private func requestHealthKitAccess() {
-        showingAuthorization = true
+        checkHealthKitAuthorization()
     }
     
     private func loadHealthData() {
-        // Simulate loading health data
-        healthData = HealthData.sampleData
+        // Example: Fetch steps
+        HealthKitManager.shared.fetchSteps { steps in
+            healthData.steps = Int(steps)
+            // TODO: Fetch other metrics using HealthKitManager
+        }
     }
 }
 

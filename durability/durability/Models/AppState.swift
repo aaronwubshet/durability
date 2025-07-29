@@ -24,6 +24,11 @@ class AppState: ObservableObject {
     @Published var activeRecoveryModule: RecoveryModule?
     @Published var recoveryModuleProgress: [String: Int] = [:] // moduleId: currentWeek
     
+    // Recovery workout tracking
+    @Published var currentRecoverySession: RecoveryWorkoutSession?
+    @Published var recoveryWorkoutHistory: [RecoveryWorkoutSession] = []
+    @Published var isRecoveryWorkoutActive: Bool = false
+    
     init() {
         // Check if user is already authenticated
         checkAuthenticationStatus()
@@ -145,6 +150,93 @@ class AppState: ObservableObject {
         if currentWeek < module.durationWeeks {
             recoveryModuleProgress[module.id] = currentWeek + 1
         }
+    }
+    
+    // MARK: - Recovery Workout Tracking
+    
+    func startRecoveryWorkout(for module: RecoveryModule, phaseIndex: Int, weekNumber: Int) {
+        var session = RecoveryWorkoutSession(moduleId: module.id, phaseIndex: phaseIndex, weekNumber: weekNumber)
+        currentRecoverySession = session
+        isRecoveryWorkoutActive = true
+        
+        // Create initial workout with exercises from the phase
+        let phase = module.phases[phaseIndex]
+        var workout = RecoveryWorkout(moduleId: module.id, phaseIndex: phaseIndex, weekNumber: weekNumber)
+        
+        // Add exercises from the phase
+        workout.exercises = phase.exercises.map { exerciseName in
+            var exercise = RecoveryExercise(name: exerciseName)
+            // Add default sets based on exercise type
+            exercise.sets = [RecoverySet(), RecoverySet(), RecoverySet()] // Default 3 sets
+            return exercise
+        }
+        
+        session.workouts.append(workout)
+        currentRecoverySession = session
+    }
+    
+    func completeRecoveryWorkout() {
+        guard var session = currentRecoverySession else { return }
+        
+        session.endTime = Date()
+        session.isCompleted = true
+        
+        // Mark all workouts as completed
+        for i in session.workouts.indices {
+            session.workouts[i].isCompleted = true
+            for j in session.workouts[i].exercises.indices {
+                session.workouts[i].exercises[j].isCompleted = true
+                for k in session.workouts[i].exercises[j].sets.indices {
+                    session.workouts[i].exercises[j].sets[k].isCompleted = true
+                }
+            }
+        }
+        
+        // Save to history
+        recoveryWorkoutHistory.append(session)
+        
+        // Clear current session
+        currentRecoverySession = nil
+        isRecoveryWorkoutActive = false
+        
+        // Advance to next week if this was the last workout of the week
+        advanceRecoveryModule()
+    }
+    
+    func pauseRecoveryWorkout() {
+        // Save current session to history without marking as completed
+        if let session = currentRecoverySession {
+            recoveryWorkoutHistory.append(session)
+        }
+        
+        currentRecoverySession = nil
+        isRecoveryWorkoutActive = false
+    }
+    
+    func getCurrentPhase(for module: RecoveryModule) -> RecoveryPhase? {
+        guard let currentWeek = recoveryModuleProgress[module.id] else { return nil }
+        
+        var weekCount = 0
+        for (_, phase) in module.phases.enumerated() {
+            if weekCount < currentWeek && currentWeek <= weekCount + phase.duration {
+                return phase
+            }
+            weekCount += phase.duration
+        }
+        return nil
+    }
+    
+    func getCurrentPhaseIndex(for module: RecoveryModule) -> Int? {
+        guard let currentWeek = recoveryModuleProgress[module.id] else { return nil }
+        
+        var weekCount = 0
+        for (index, phase) in module.phases.enumerated() {
+            if weekCount < currentWeek && currentWeek <= weekCount + phase.duration {
+                return index
+            }
+            weekCount += phase.duration
+        }
+        return nil
     }
     
     // MARK: - Demo User Creation

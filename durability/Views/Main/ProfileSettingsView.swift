@@ -5,6 +5,7 @@ struct ProfileSettingsView: View {
     @State private var showingEditProfile = false
     @State private var showingReAssessment = false
     @State private var showingLogoutAlert = false
+    @State private var reassessStep: OnboardingStep = .movementAssessment
     
     var body: some View {
         NavigationView {
@@ -35,7 +36,7 @@ struct ProfileSettingsView: View {
                 EditProfileView(user: appState.currentUser)
             }
             .sheet(isPresented: $showingReAssessment) {
-                ReAssessmentView()
+                MovementAssessmentView(appState: appState, currentStep: $reassessStep)
             }
             .alert("Sign Out", isPresented: $showingLogoutAlert) {
                 Button("Cancel", role: .cancel) { }
@@ -128,7 +129,7 @@ struct QuickActionsSection: View {
                 }
                 
                 QuickActionRow(
-                    icon: "chart.radar",
+                    icon: "chart.bar",
                     title: "View Progress",
                     subtitle: "See your fitness journey"
                 ) {
@@ -468,73 +469,6 @@ struct EditProfileView: View {
 }
 
 // MARK: - Re-Assessment View
-
-struct ReAssessmentView: View {
-    @Environment(\.dismiss) private var dismiss
-    
-    var body: some View {
-        NavigationView {
-            VStack(spacing: 24) {
-                Text("Re-Assess Your Movement")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundColor(.durabilityPrimaryText)
-                
-                VStack(spacing: 16) {
-                    Text("Take a new movement assessment to update your durability score and get fresh recommendations.")
-                        .font(.subheadline)
-                        .foregroundColor(.durabilitySecondaryText)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                    
-                    VStack(spacing: 12) {
-                        AssessmentFeatureRow(
-                            icon: "chart.radar",
-                            title: "Updated Super Metrics",
-                            description: "See how your fitness has changed"
-                        )
-                        
-                        AssessmentFeatureRow(
-                            icon: "arrow.triangle.2.circlepath",
-                            title: "Fresh Recommendations",
-                            description: "Get new personalized programming"
-                        )
-                        
-                        AssessmentFeatureRow(
-                            icon: "chart.line.uptrend.xyaxis",
-                            title: "Progress Tracking",
-                            description: "Compare with previous assessments"
-                        )
-                    }
-                }
-                
-                Spacer()
-                
-                Button("Start Assessment") {
-                    // Start new assessment
-                    dismiss()
-                }
-                .font(.title3)
-                .fontWeight(.semibold)
-                .foregroundColor(.black)
-                .frame(maxWidth: .infinity)
-                .frame(height: 56)
-                .background(Color.durabilityPrimaryAccent)
-                .cornerRadius(16)
-            }
-            .padding()
-            .background(Color.durabilityBackground)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-            }
-        }
-    }
-}
 
 struct AssessmentFeatureRow: View {
     let icon: String

@@ -5,6 +5,7 @@ struct RecoveryModulesView: View {
     @State private var searchText = ""
     @State private var selectedFilter: RecoveryFilter = .all
     @State private var showingModuleDetail: RecoveryModule?
+    @State private var showingWorkoutView = false
     
     var body: some View {
         NavigationView {
@@ -25,10 +26,14 @@ struct RecoveryModulesView: View {
                             RecoveryModuleCard(
                                 module: module,
                                 isActive: appState.activeRecoveryModule?.id == module.id,
-                                progress: appState.recoveryModuleProgress[module.id] ?? 0
-                            ) {
-                                showingModuleDetail = module
-                            }
+                                progress: appState.recoveryModuleProgress[module.id] ?? 0,
+                                onTap: {
+                                    showingModuleDetail = module
+                                },
+                                onStartWorkout: {
+                                    startWorkout(for: module)
+                                }
+                            )
                         }
                     }
                     .padding(.horizontal)
@@ -42,6 +47,22 @@ struct RecoveryModulesView: View {
         .sheet(item: $showingModuleDetail) { module in
             RecoveryModuleDetailView(module: module, appState: appState)
         }
+        .sheet(isPresented: $showingWorkoutView) {
+            RecoveryWorkoutView(appState: appState)
+        }
+    }
+    
+    private func startWorkout(for module: RecoveryModule) {
+        guard let currentWeek = appState.recoveryModuleProgress[module.id],
+              let phaseIndex = appState.getCurrentPhaseIndex(for: module) else {
+            // Start from week 1 if no progress
+            appState.startRecoveryWorkout(for: module, phaseIndex: 0, weekNumber: 1)
+            showingWorkoutView = true
+            return
+        }
+        
+        appState.startRecoveryWorkout(for: module, phaseIndex: phaseIndex, weekNumber: currentWeek)
+        showingWorkoutView = true
     }
     
     private var filteredModules: [RecoveryModule] {
@@ -147,113 +168,136 @@ struct RecoveryModuleCard: View {
     let module: RecoveryModule
     let isActive: Bool
     let progress: Int
-    let action: () -> Void
+    let onTap: () -> Void
+    let onStartWorkout: () -> Void
     
     var body: some View {
-        Button(action: action) {
-            VStack(alignment: .leading, spacing: 16) {
-                // Header
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(module.title)
-                            .font(.headline)
-                            .foregroundColor(.durabilityPrimaryText)
-                        
-                        Text(module.description)
-                            .font(.subheadline)
-                            .foregroundColor(.durabilitySecondaryText)
-                            .lineLimit(2)
-                    }
+        VStack(alignment: .leading, spacing: 16) {
+            // Header
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(module.title)
+                        .font(.headline)
+                        .foregroundColor(.durabilityPrimaryText)
                     
-                    Spacer()
-                    
-                    VStack(alignment: .trailing, spacing: 4) {
-                        if isActive {
-                            Text("ACTIVE")
-                                .font(.caption)
-                                .fontWeight(.bold)
-                                .foregroundColor(.durabilityPrimaryAccent)
-                        }
-                        
-                        Image(systemName: "chevron.right")
-                            .foregroundColor(.durabilitySecondaryText)
-                    }
+                    Text(module.description)
+                        .font(.subheadline)
+                        .foregroundColor(.durabilitySecondaryText)
+                        .lineLimit(2)
                 }
                 
-                // Progress indicator
-                if isActive && progress > 0 {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("Week \(progress) of \(module.durationWeeks)")
-                                .font(.caption)
-                                .foregroundColor(.durabilitySecondaryText)
-                            
-                            Spacer()
-                            
-                            Text("\(Int((Double(progress) / Double(module.durationWeeks)) * 100))%")
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.durabilityPrimaryAccent)
-                        }
-                        
-                        ProgressView(value: Double(progress), total: Double(module.durationWeeks))
-                            .progressViewStyle(LinearProgressViewStyle(tint: .durabilityPrimaryAccent))
+                Spacer()
+                
+                VStack(alignment: .trailing, spacing: 4) {
+                    if isActive {
+                        Text("ACTIVE")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(.durabilityPrimaryAccent)
                     }
-                }
-                
-                // Tags
-                HStack(spacing: 8) {
-                    DifficultyBadge(difficulty: module.difficulty.rawValue)
                     
-                    Text("\(module.durationWeeks) weeks")
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.durabilitySecondaryAccent.opacity(0.2))
-                        .foregroundColor(.durabilitySecondaryAccent)
-                        .cornerRadius(8)
-                    
-                    Text("\(module.uniqueMovementsCount) movements")
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.durabilityTertiaryAccent.opacity(0.2))
-                        .foregroundColor(.durabilityTertiaryAccent)
-                        .cornerRadius(8)
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(.durabilitySecondaryText)
                 }
-                
-                // Recommended for
-                if !module.recommendedFor.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Recommended for:")
+            }
+            
+            // Progress indicator
+            if isActive && progress > 0 {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Week \(progress) of \(module.durationWeeks)")
                             .font(.caption)
                             .foregroundColor(.durabilitySecondaryText)
                         
-                        FlowLayout(spacing: 8) {
-                            ForEach(module.recommendedFor, id: \.self) { recommendation in
-                                Text(recommendation)
-                                    .font(.caption)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.durabilityCardBackground)
-                                    .foregroundColor(.durabilitySecondaryText)
-                                    .cornerRadius(8)
-                            }
+                        Spacer()
+                        
+                        Text("\(Int((Double(progress) / Double(module.durationWeeks)) * 100))%")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.durabilityPrimaryAccent)
+                    }
+                    
+                    ProgressView(value: Double(progress), total: Double(module.durationWeeks))
+                        .progressViewStyle(LinearProgressViewStyle(tint: .durabilityPrimaryAccent))
+                }
+            }
+            
+            // Tags
+            HStack(spacing: 8) {
+                DifficultyBadge(difficulty: module.difficulty.rawValue)
+                
+                Text("\(module.durationWeeks) weeks")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.durabilitySecondaryAccent.opacity(0.2))
+                    .foregroundColor(.durabilitySecondaryAccent)
+                    .cornerRadius(8)
+                
+                Text("\(module.uniqueMovementsCount) movements")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.durabilityTertiaryAccent.opacity(0.2))
+                    .foregroundColor(.durabilityTertiaryAccent)
+                    .cornerRadius(8)
+            }
+            
+            // Recommended for
+            if !module.recommendedFor.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Recommended for:")
+                        .font(.caption)
+                        .foregroundColor(.durabilitySecondaryText)
+                    
+                    FlowLayout(spacing: 8) {
+                        ForEach(module.recommendedFor, id: \.self) { recommendation in
+                            Text(recommendation)
+                                .font(.caption)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Color.durabilityCardBackground)
+                                .foregroundColor(.durabilitySecondaryText)
+                                .cornerRadius(8)
                         }
                     }
                 }
             }
-            .padding()
-            .background(Color.durabilityCardBackground)
-            .cornerRadius(16)
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(isActive ? Color.durabilityPrimaryAccent : Color.clear, lineWidth: 2)
-            )
+            
+            // Action buttons
+            HStack(spacing: 12) {
+                Button(action: onTap) {
+                    Text("View Details")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.durabilityPrimaryText)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 44)
+                        .background(Color.durabilityCardBackground)
+                        .cornerRadius(12)
+                }
+                
+                Button(action: onStartWorkout) {
+                    Text(isActive ? "Continue Workout" : "Start Workout")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 44)
+                        .background(Color.durabilityPrimaryAccent)
+                        .cornerRadius(12)
+                }
+            }
         }
-        .buttonStyle(PlainButtonStyle())
+        .padding()
+        .background(Color.durabilityCardBackground)
+        .cornerRadius(16)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(isActive ? Color.durabilityPrimaryAccent : Color.clear, lineWidth: 2)
+        )
     }
 }
 
@@ -262,6 +306,7 @@ struct RecoveryModuleDetailView: View {
     @ObservedObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
     @State private var selectedPhaseIndex = 0
+    @State private var showingWorkoutView = false
     
     var body: some View {
         NavigationView {
@@ -314,33 +359,48 @@ struct RecoveryModuleDetailView: View {
                         }
                     }
                     
-                    // Start/Continue button
-                    if appState.activeRecoveryModule?.id != module.id {
-                        Button(action: {
-                            appState.startRecoveryModule(module)
-                            dismiss()
-                        }) {
-                            Text("Start Program")
-                                .font(.title3)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.black)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 56)
-                                .background(Color.durabilityPrimaryAccent)
-                                .cornerRadius(16)
-                        }
-                    } else {
-                        Button(action: {
-                            appState.advanceRecoveryModule()
-                        }) {
-                            Text("Continue Program")
-                                .font(.title3)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.black)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 56)
-                                .background(Color.durabilityPrimaryAccent)
-                                .cornerRadius(16)
+                    // Action buttons
+                    VStack(spacing: 12) {
+                        if appState.activeRecoveryModule?.id != module.id {
+                            Button(action: {
+                                appState.startRecoveryModule(module)
+                                dismiss()
+                            }) {
+                                Text("Start Program")
+                                    .font(.title3)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.black)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 56)
+                                    .background(Color.durabilityPrimaryAccent)
+                                    .cornerRadius(16)
+                            }
+                        } else {
+                            Button(action: {
+                                startWorkout()
+                            }) {
+                                Text("Start Today's Workout")
+                                    .font(.title3)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.black)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 56)
+                                    .background(Color.durabilityPrimaryAccent)
+                                    .cornerRadius(16)
+                            }
+                            
+                            Button(action: {
+                                appState.advanceRecoveryModule()
+                            }) {
+                                Text("Continue Program")
+                                    .font(.title3)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.durabilityPrimaryText)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 56)
+                                    .background(Color.durabilityCardBackground)
+                                    .cornerRadius(16)
+                            }
                         }
                     }
                 }
@@ -357,6 +417,22 @@ struct RecoveryModuleDetailView: View {
                 }
             }
         }
+        .sheet(isPresented: $showingWorkoutView) {
+            RecoveryWorkoutView(appState: appState)
+        }
+    }
+    
+    private func startWorkout() {
+        guard let currentWeek = appState.recoveryModuleProgress[module.id],
+              let phaseIndex = appState.getCurrentPhaseIndex(for: module) else {
+            // Start from week 1 if no progress
+            appState.startRecoveryWorkout(for: module, phaseIndex: 0, weekNumber: 1)
+            showingWorkoutView = true
+            return
+        }
+        
+        appState.startRecoveryWorkout(for: module, phaseIndex: phaseIndex, weekNumber: currentWeek)
+        showingWorkoutView = true
     }
     
     private func isPhaseActive(_ index: Int) -> Bool {

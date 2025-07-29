@@ -48,6 +48,83 @@ enum ModuleDifficulty: String, CaseIterable, Codable {
     case advanced = "advanced"
 }
 
+// MARK: - Workout Tracking Models
+
+struct RecoveryWorkout: Codable, Identifiable {
+    let id: UUID
+    let moduleId: String
+    let phaseIndex: Int
+    let weekNumber: Int
+    let date: Date
+    var exercises: [RecoveryExercise]
+    var isCompleted: Bool
+    var notes: String?
+    var duration: TimeInterval?
+    
+    init(moduleId: String, phaseIndex: Int, weekNumber: Int) {
+        self.id = UUID()
+        self.moduleId = moduleId
+        self.phaseIndex = phaseIndex
+        self.weekNumber = weekNumber
+        self.date = Date()
+        self.exercises = []
+        self.isCompleted = false
+    }
+}
+
+struct RecoveryExercise: Codable, Identifiable {
+    let id: UUID
+    let name: String
+    var sets: [RecoverySet]
+    var isCompleted: Bool
+    var notes: String?
+    
+    init(name: String) {
+        self.id = UUID()
+        self.name = name
+        self.sets = []
+        self.isCompleted = false
+    }
+}
+
+struct RecoverySet: Codable, Identifiable {
+    let id: UUID
+    var reps: Int?
+    var duration: TimeInterval?
+    var weight: Double?
+    var distance: Double?
+    var isCompleted: Bool
+    var notes: String?
+    
+    init() {
+        self.id = UUID()
+        self.isCompleted = false
+    }
+}
+
+// MARK: - Workout Session Models
+
+struct RecoveryWorkoutSession: Codable, Identifiable {
+    let id: UUID
+    let moduleId: String
+    let phaseIndex: Int
+    let weekNumber: Int
+    let startTime: Date
+    var endTime: Date?
+    var workouts: [RecoveryWorkout]
+    var isCompleted: Bool
+    
+    init(moduleId: String, phaseIndex: Int, weekNumber: Int) {
+        self.id = UUID()
+        self.moduleId = moduleId
+        self.phaseIndex = phaseIndex
+        self.weekNumber = weekNumber
+        self.startTime = Date()
+        self.workouts = []
+        self.isCompleted = false
+    }
+}
+
 // MARK: - Recovery Module Definitions
 
 extension RecoveryModule {

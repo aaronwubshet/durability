@@ -14,14 +14,14 @@ struct DurabilityColors {
     static let electricPurple = Color(red: 0.8, green: 0.0, blue: 1.0)
     
     // Accent colors
-    static let primaryAccent = electricGreen
+    static let primaryAccent = electricPurple
     static let secondaryAccent = electricBlue
-    static let tertiaryAccent = electricPurple
+    static let tertiaryAccent = electricGreen
     
     // Text colors
     static let primaryText = Color.white
     static let secondaryText = Color.gray
-    static let accentText = electricGreen
+    static let accentText = electricPurple
     
     // Status colors
     static let success = electricGreen
@@ -31,13 +31,13 @@ struct DurabilityColors {
     
     // Progress colors
     static let progressBackground = Color(red: 0.2, green: 0.2, blue: 0.2)
-    static let progressFill = electricGreen
+    static let progressFill = electricPurple
     
     // Chart colors
     static let chartColors: [Color] = [
-        electricGreen,
-        electricBlue,
         electricPurple,
+        electricBlue,
+        electricGreen,
         Color.orange,
         Color.yellow
     ]
@@ -61,7 +61,7 @@ extension Color {
 
 extension LinearGradient {
     static let durabilityGradient = LinearGradient(
-        colors: [DurabilityColors.electricGreen, DurabilityColors.electricBlue],
+        colors: [DurabilityColors.electricPurple, DurabilityColors.electricBlue],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )

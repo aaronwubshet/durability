@@ -1,11 +1,12 @@
 import SwiftUI
+import HealthKit
 
 struct HealthKitIntegrationView: View {
     @ObservedObject var appState: AppState
     @Binding var currentStep: OnboardingStep
     
     @State private var healthKitEnabled = false
-    @State private var showingPermissionAlert = false
+    @State private var healthKitError: String? = nil
     
     var body: some View {
         VStack(spacing: 30) {
@@ -104,26 +105,37 @@ struct HealthKitIntegrationView: View {
             }
             .padding(.horizontal)
             .padding(.bottom)
+            if let error = healthKitError {
+                Text(error)
+                    .foregroundColor(.red)
+                    .padding()
+            }
         }
-        .alert("Health Data Permission", isPresented: $showingPermissionAlert) {
-            Button("Allow") {
-                healthKitEnabled = true
-                appState.onboardingData.healthKitEnabled = true
-                proceedToNextStep()
-            }
-            Button("Don't Allow") {
-                healthKitEnabled = false
-                appState.onboardingData.healthKitEnabled = false
-                proceedToNextStep()
-            }
-        } message: {
-            Text("durability would like to access your health data to provide personalized insights and track your progress.")
+        .onAppear {
+            // Optionally, check if already authorized
+            healthKitEnabled = false
         }
     }
     
     private func requestHealthKitPermission() {
-        // Simulate HealthKit permission request
-        showingPermissionAlert = true
+        // Reset error state
+        healthKitError = nil
+        
+        if HealthKitManager.shared.checkAvailability() {
+            HealthKitManager.shared.requestAuthorization { success, error in
+                DispatchQueue.main.async {
+                    if success {
+                        self.healthKitEnabled = true
+                        self.appState.onboardingData.healthKitEnabled = true
+                        self.proceedToNextStep()
+                    } else {
+                        self.healthKitError = error?.localizedDescription ?? "HealthKit authorization denied."
+                    }
+                }
+            }
+        } else {
+            healthKitError = "HealthKit is not available on this device."
+        }
     }
     
     private func skipHealthKit() {

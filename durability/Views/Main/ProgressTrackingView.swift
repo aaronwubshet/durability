@@ -4,6 +4,8 @@ struct ProgressTrackingView: View {
     @ObservedObject var appState: AppState
     @State private var selectedTimeframe: Timeframe = .month
     @State private var showingAnalytics = false
+    @State private var showingReAssessment = false
+    @State private var reassessStep: OnboardingStep = .movementAssessment
     
     var body: some View {
         NavigationView {
@@ -47,7 +49,7 @@ struct ProgressTrackingView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Re-Assess") {
-                        // Start new assessment
+                        showingReAssessment = true
                     }
                     .foregroundColor(.durabilityPrimaryAccent)
                 }
@@ -55,6 +57,9 @@ struct ProgressTrackingView: View {
         }
         .sheet(isPresented: $showingAnalytics) {
             AnalyticsDashboardView(appState: appState)
+        }
+        .sheet(isPresented: $showingReAssessment) {
+            MovementAssessmentView(appState: appState, currentStep: $reassessStep)
         }
     }
 }
