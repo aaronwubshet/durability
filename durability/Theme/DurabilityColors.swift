@@ -4,42 +4,39 @@ import SwiftUI
 
 struct DurabilityColors {
     // Background colors
-    static let background = Color.black
-    static let secondaryBackground = Color(red: 0.1, green: 0.1, blue: 0.1)
-    static let cardBackground = Color(red: 0.15, green: 0.15, blue: 0.15)
+    static let background = Color(red: 0.212, green: 0.208, blue: 0.204)
+    static let secondaryBackground = Color(red: 0.157, green: 0.153, blue: 0.149)
+    static let cardBackground = Color(red: 0.267, green: 0.263, blue: 0.259)
     
-    // Electric colors
-    static let electricGreen = Color(red: 0.0, green: 1.0, blue: 0.5)
-    static let electricBlue = Color(red: 0.0, green: 0.8, blue: 1.0)
-    static let electricPurple = Color(red: 0.8, green: 0.0, blue: 1.0)
+    // Primary accent color - Electric Green (#0bd800)
+    static let primaryAccent = Color(red: 0.043, green: 0.847, blue: 0.000)
     
-    // Accent colors
-    static let primaryAccent = electricPurple
-    static let secondaryAccent = electricBlue
-    static let tertiaryAccent = electricGreen
+    // Secondary accent colors (complementary to electric green)
+    static let secondaryAccent = Color(red: 0.000, green: 0.600, blue: 0.000) // Darker green
+    static let tertiaryAccent = Color(red: 0.200, green: 0.800, blue: 0.200) // Lighter green
     
     // Text colors
     static let primaryText = Color.white
-    static let secondaryText = Color.gray
-    static let accentText = electricPurple
+    static let secondaryText = Color(red: 0.800, green: 0.796, blue: 0.792)
+    static let accentText = primaryAccent
     
     // Status colors
-    static let success = electricGreen
-    static let warning = Color.orange
-    static let error = Color.red
-    static let info = electricBlue
+    static let success = Color(red: 0.043, green: 0.847, blue: 0.000) // Electric green
+    static let warning = Color(red: 0.847, green: 0.600, blue: 0.000) // Orange-yellow
+    static let error = Color(red: 0.847, green: 0.243, blue: 0.243) // Red
+    static let info = primaryAccent
     
     // Progress colors
-    static let progressBackground = Color(red: 0.2, green: 0.2, blue: 0.2)
-    static let progressFill = electricPurple
+    static let progressBackground = Color(red: 0.157, green: 0.153, blue: 0.149)
+    static let progressFill = primaryAccent
     
-    // Chart colors
+    // Chart colors (electric green palette)
     static let chartColors: [Color] = [
-        electricPurple,
-        electricBlue,
-        electricGreen,
-        Color.orange,
-        Color.yellow
+        primaryAccent, // Electric green
+        secondaryAccent, // Darker green
+        tertiaryAccent, // Lighter green
+        Color(red: 0.000, green: 0.400, blue: 0.000), // Forest green
+        Color(red: 0.400, green: 0.900, blue: 0.400)  // Bright green
     ]
 }
 
@@ -61,13 +58,13 @@ extension Color {
 
 extension LinearGradient {
     static let durabilityGradient = LinearGradient(
-        colors: [DurabilityColors.electricPurple, DurabilityColors.electricBlue],
+        colors: [DurabilityColors.primaryAccent, DurabilityColors.secondaryAccent],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
     
-    static let durabilityGradientPurple = LinearGradient(
-        colors: [DurabilityColors.electricPurple, DurabilityColors.electricBlue],
+    static let durabilityGradientAccent = LinearGradient(
+        colors: [DurabilityColors.primaryAccent, DurabilityColors.tertiaryAccent],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
