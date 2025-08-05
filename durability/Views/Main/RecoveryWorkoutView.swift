@@ -249,7 +249,7 @@ struct NotesSectionView: View {
                 .foregroundColor(.durabilityPrimaryText)
             
             TextField("Add notes about your workout...", text: $notes, axis: .vertical)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .textFieldStyle(DurabilityTextFieldStyle())
                 .lineLimit(3...6)
         }
         .padding()
@@ -358,8 +358,8 @@ struct ExerciseDetailView: View {
                             .font(.headline)
                             .foregroundColor(.durabilityPrimaryText)
                         
-                        TextField("Add notes about this exercise...", text: $exerciseNotes, axis: .vertical)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    TextField("Add notes about this exercise...", text: $exerciseNotes, axis: .vertical)
+                .textFieldStyle(DurabilityTextFieldStyle())
                             .lineLimit(3...6)
                     }
                     
@@ -415,8 +415,8 @@ struct SetRowView: View {
                     .font(.caption)
                     .foregroundColor(.durabilitySecondaryText)
                 
-                TextField("0", value: $set.reps, format: .number)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                            TextField("0", value: $set.reps, format: .number)
+                                .textFieldStyle(DurabilityTextFieldStyle())
                     .frame(width: 60)
             }
             
@@ -426,8 +426,8 @@ struct SetRowView: View {
                     .font(.caption)
                     .foregroundColor(.durabilitySecondaryText)
                 
-                TextField("0", value: $set.weight, format: .number)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                            TextField("0", value: $set.weight, format: .number)
+                                .textFieldStyle(DurabilityTextFieldStyle())
                     .frame(width: 60)
             }
             
@@ -437,8 +437,8 @@ struct SetRowView: View {
                     .font(.caption)
                     .foregroundColor(.durabilitySecondaryText)
                 
-                TextField("0", value: $set.duration, format: .number)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                            TextField("0", value: $set.duration, format: .number)
+                                .textFieldStyle(DurabilityTextFieldStyle())
                     .frame(width: 60)
             }
             

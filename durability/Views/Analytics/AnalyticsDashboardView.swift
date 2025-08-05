@@ -28,7 +28,8 @@ struct AnalyticsDashboardView: View {
                     // Progress charts
                     ProgressChartsView(
                         timeRange: selectedTimeRange,
-                        selectedMetric: $selectedMetric
+                        selectedMetric: $selectedMetric,
+                        appState: appState
                     )
                     
                     // Insights
@@ -133,14 +134,109 @@ struct AnalyticsDashboardView: View {
     }
     
     private func getChartData(for metric: AnalyticsMetric) -> [ChartDataPoint] {
-        // Simulate chart data
+        guard let user = appState.currentUser else { return [] }
+        
+        // Use real assessment data if available
+        let assessments = user.assessmentResults.sorted { $0.date < $1.date }
+        
+        if !assessments.isEmpty {
+            return assessments.map { assessment in
+                let value: Double
+                switch metric {
+                case .durabilityScore:
+                    value = assessment.durabilityScore
+                case .rangeOfMotion:
+                    value = assessment.superMetrics.rangeOfMotion * 100
+                case .flexibility:
+                    value = assessment.superMetrics.flexibility * 100
+                case .mobility:
+                    value = assessment.superMetrics.mobility * 100
+                case .functionalStrength:
+                    value = assessment.superMetrics.functionalStrength * 100
+                case .aerobicCapacity:
+                    value = assessment.superMetrics.aerobicCapacity * 100
+                }
+                
+                return ChartDataPoint(
+                    date: assessment.date,
+                    value: value
+                )
+            }
+        }
+        
+        // Generate simulated data with proper randomization for the selected time range
         let days = selectedTimeRange.days
         return (0..<days).map { day in
-            ChartDataPoint(
-                date: Calendar.current.date(byAdding: .day, value: -day, to: Date()) ?? Date(),
-                value: Double.random(in: 60...90)
+            let date = Calendar.current.date(byAdding: .day, value: -day, to: Date()) ?? Date()
+            let value = generateRandomValue(for: metric, date: date)
+            
+            return ChartDataPoint(
+                date: date,
+                value: value
             )
         }.reversed()
+    }
+    
+    private func generateRandomValue(for metric: AnalyticsMetric, date: Date) -> Double {
+        let calendar = Calendar.current
+        let dayOfYear = calendar.ordinality(of: .day, in: .year, for: date) ?? 1
+        let weekOfYear = calendar.component(.weekOfYear, from: date)
+        let dayOfWeek = calendar.component(.weekday, from: date)
+        let month = calendar.component(.month, from: date)
+        let dayOfMonth = calendar.component(.day, from: date)
+        
+        // Create metric-specific base values and variations
+        let baseValue: Double
+        let variationRange: Double
+        
+        switch metric {
+        case .durabilityScore:
+            baseValue = 75.0
+            variationRange = 25.0
+        case .rangeOfMotion:
+            baseValue = 80.0
+            variationRange = 20.0
+        case .flexibility:
+            baseValue = 70.0
+            variationRange = 30.0
+        case .mobility:
+            baseValue = 75.0
+            variationRange = 25.0
+        case .functionalStrength:
+            baseValue = 65.0
+            variationRange = 35.0
+        case .aerobicCapacity:
+            baseValue = 60.0
+            variationRange = 40.0
+        }
+        
+        // Generate completely new random patterns using multiple mathematical functions
+        let dayOfYearDouble = Double(dayOfYear)
+        let weekOfYearDouble = Double(weekOfYear)
+        let dayOfWeekDouble = Double(dayOfWeek)
+        let monthDouble = Double(month)
+        let dayOfMonthDouble = Double(dayOfMonth)
+        let metricSeed = Double(metric.hashValue)
+        
+        // Multiple random patterns combined
+        let pattern1 = sin(dayOfYearDouble * 0.3 + metricSeed * 0.5) * 0.4
+        let pattern2 = cos(weekOfYearDouble * 0.8 + metricSeed * 0.3) * 0.3
+        let pattern3 = sin(dayOfWeekDouble * 1.2 + metricSeed * 0.7) * 0.25
+        let pattern4 = cos(monthDouble * 0.6 + metricSeed * 0.2) * 0.2
+        let pattern5 = sin(dayOfMonthDouble * 0.15 + metricSeed * 0.4) * 0.15
+        
+        // Complex combined patterns
+        let complexPattern1 = sin(dayOfYearDouble * 0.15 + weekOfYearDouble * 0.4 + metricSeed) * 0.3
+        let complexPattern2 = cos(dayOfYearDouble * 0.08 + monthDouble * 0.3 + metricSeed * 0.6) * 0.25
+        
+        // Noise pattern
+        let noiseSeed = dayOfYearDouble + weekOfYearDouble * 7.0 + dayOfWeekDouble * 3.0 + monthDouble * 30.0 + metricSeed
+        let noisePattern = sin(noiseSeed * 0.2) * 0.2
+        
+        // Combine all patterns
+        let totalVariation = (pattern1 + pattern2 + pattern3 + pattern4 + pattern5 + complexPattern1 + complexPattern2 + noisePattern) * variationRange
+        
+        return max(0, min(100, baseValue + totalVariation))
     }
 }
 
@@ -297,6 +393,7 @@ struct MetricIndicator: View {
 struct ProgressChartsView: View {
     let timeRange: AnalyticsTimeRange
     @Binding var selectedMetric: AnalyticsMetric
+    @ObservedObject var appState: AppState
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -324,25 +421,241 @@ struct ProgressChartsView: View {
                 }
             }
             
-            // Chart placeholder
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.durabilityCardBackground)
-                .frame(height: 200)
-                .overlay(
-                    VStack(spacing: 12) {
-                        Image(systemName: "chart.line.uptrend.xyaxis")
-                            .font(.system(size: 40))
-                            .foregroundColor(.durabilitySecondaryText)
-                        
-                        Text("Interactive Chart")
-                            .font(.subheadline)
-                            .foregroundColor(.durabilitySecondaryText)
-                    }
-                )
+            // Real chart with data
+            let chartData = getChartData(for: selectedMetric)
+            if !chartData.isEmpty {
+                ChartView(data: chartData, metric: selectedMetric)
+                    .frame(height: 200)
+            } else {
+                // Fallback placeholder
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.durabilityCardBackground)
+                    .frame(height: 200)
+                    .overlay(
+                        VStack(spacing: 12) {
+                            Image(systemName: "chart.line.uptrend.xyaxis")
+                                .font(.system(size: 40))
+                                .foregroundColor(.durabilitySecondaryText)
+                            
+                            Text("No data available")
+                                .font(.subheadline)
+                                .foregroundColor(.durabilitySecondaryText)
+                        }
+                    )
+            }
         }
         .padding()
         .background(Color.durabilityCardBackground)
         .cornerRadius(16)
+    }
+    
+    private func getChartData(for metric: AnalyticsMetric) -> [ChartDataPoint] {
+        guard let user = appState.currentUser else { return [] }
+        
+        // Use real assessment data if available
+        let assessments = user.assessmentResults.sorted { $0.date < $1.date }
+        
+        if !assessments.isEmpty {
+            return assessments.map { assessment in
+                let value: Double
+                switch metric {
+                case .durabilityScore:
+                    value = assessment.durabilityScore
+                case .rangeOfMotion:
+                    value = assessment.superMetrics.rangeOfMotion * 100
+                case .flexibility:
+                    value = assessment.superMetrics.flexibility * 100
+                case .mobility:
+                    value = assessment.superMetrics.mobility * 100
+                case .functionalStrength:
+                    value = assessment.superMetrics.functionalStrength * 100
+                case .aerobicCapacity:
+                    value = assessment.superMetrics.aerobicCapacity * 100
+                }
+                
+                return ChartDataPoint(
+                    date: assessment.date,
+                    value: value
+                )
+            }
+        }
+        
+        // Generate simulated data for the selected time range
+        let days = timeRange.days
+        return (0..<days).map { day in
+            let date = Calendar.current.date(byAdding: .day, value: -day, to: Date()) ?? Date()
+            let value = generateRandomValue(for: metric, date: date)
+            
+            return ChartDataPoint(
+                date: date,
+                value: value
+            )
+        }.reversed()
+    }
+    
+    private func generateRandomValue(for metric: AnalyticsMetric, date: Date) -> Double {
+        let calendar = Calendar.current
+        let dayOfYear = calendar.ordinality(of: .day, in: .year, for: date) ?? 1
+        let weekOfYear = calendar.component(.weekOfYear, from: date)
+        let dayOfWeek = calendar.component(.weekday, from: date)
+        let month = calendar.component(.month, from: date)
+        let dayOfMonth = calendar.component(.day, from: date)
+        
+        // Create metric-specific base values and variations
+        let baseValue: Double
+        let variationRange: Double
+        
+        switch metric {
+        case .durabilityScore:
+            baseValue = 75.0
+            variationRange = 25.0
+        case .rangeOfMotion:
+            baseValue = 80.0
+            variationRange = 20.0
+        case .flexibility:
+            baseValue = 70.0
+            variationRange = 30.0
+        case .mobility:
+            baseValue = 75.0
+            variationRange = 25.0
+        case .functionalStrength:
+            baseValue = 65.0
+            variationRange = 35.0
+        case .aerobicCapacity:
+            baseValue = 60.0
+            variationRange = 40.0
+        }
+        
+        // Generate completely new random patterns using multiple mathematical functions
+        let dayOfYearDouble = Double(dayOfYear)
+        let weekOfYearDouble = Double(weekOfYear)
+        let dayOfWeekDouble = Double(dayOfWeek)
+        let monthDouble = Double(month)
+        let dayOfMonthDouble = Double(dayOfMonth)
+        let metricSeed = Double(metric.hashValue)
+        
+        // Multiple random patterns combined
+        let pattern1 = sin(dayOfYearDouble * 0.3 + metricSeed * 0.5) * 0.4
+        let pattern2 = cos(weekOfYearDouble * 0.8 + metricSeed * 0.3) * 0.3
+        let pattern3 = sin(dayOfWeekDouble * 1.2 + metricSeed * 0.7) * 0.25
+        let pattern4 = cos(monthDouble * 0.6 + metricSeed * 0.2) * 0.2
+        let pattern5 = sin(dayOfMonthDouble * 0.15 + metricSeed * 0.4) * 0.15
+        
+        // Complex combined patterns
+        let complexPattern1 = sin(dayOfYearDouble * 0.15 + weekOfYearDouble * 0.4 + metricSeed) * 0.3
+        let complexPattern2 = cos(dayOfYearDouble * 0.08 + monthDouble * 0.3 + metricSeed * 0.6) * 0.25
+        
+        // Noise pattern
+        let noiseSeed = dayOfYearDouble + weekOfYearDouble * 7.0 + dayOfWeekDouble * 3.0 + monthDouble * 30.0 + metricSeed
+        let noisePattern = sin(noiseSeed * 0.2) * 0.2
+        
+        // Combine all patterns
+        let totalVariation = (pattern1 + pattern2 + pattern3 + pattern4 + pattern5 + complexPattern1 + complexPattern2 + noisePattern) * variationRange
+        
+        return max(0, min(100, baseValue + totalVariation))
+    }
+}
+
+struct ChartView: View {
+    let data: [ChartDataPoint]
+    let metric: AnalyticsMetric
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            // Chart area
+            GeometryReader { geometry in
+                ZStack {
+                    // Grid lines
+                    ChartGridLines(geometry: geometry)
+                    
+                    // Chart line
+                    Path { path in
+                        guard !data.isEmpty else { return }
+                        
+                        let points = data.enumerated().map { index, point in
+                            let x = geometry.size.width * Double(index) / Double(max(1, data.count - 1))
+                            let y = geometry.size.height * (1 - point.value / 100.0)
+                            return CGPoint(x: x, y: y)
+                        }
+                        
+                        if let firstPoint = points.first {
+                            path.move(to: firstPoint)
+                            for point in points.dropFirst() {
+                                path.addLine(to: point)
+                            }
+                        }
+                    }
+                    .stroke(Color.durabilityPrimaryAccent, lineWidth: 2)
+                    
+                    // Data points
+                    ForEach(Array(data.enumerated()), id: \.offset) { index, point in
+                        let x = geometry.size.width * Double(index) / Double(max(1, data.count - 1))
+                        let y = geometry.size.height * (1 - point.value / 100.0)
+                        
+                        Circle()
+                            .fill(Color.durabilityPrimaryAccent)
+                            .frame(width: 6, height: 6)
+                            .position(x: x, y: y)
+                    }
+                }
+            }
+            .frame(height: 160)
+            .background(Color.durabilityCardBackground)
+            .cornerRadius(12)
+            
+            // X-axis labels (dates)
+            if !data.isEmpty {
+                HStack {
+                    ForEach(Array(data.enumerated()), id: \.offset) { index, point in
+                        if index % max(1, data.count / 5) == 0 || index == data.count - 1 {
+                            Text(formatDate(point.date))
+                                .font(.caption2)
+                                .foregroundColor(.durabilitySecondaryText)
+                                .frame(maxWidth: .infinity)
+                        } else {
+                            Spacer()
+                                .frame(maxWidth: .infinity)
+                        }
+                    }
+                }
+                .padding(.horizontal, 8)
+            }
+        }
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        return formatter.string(from: date)
+    }
+}
+
+struct ChartGridLines: View {
+    let geometry: GeometryProxy
+    
+    var body: some View {
+        ZStack {
+            // Horizontal grid lines
+            ForEach(0..<5, id: \.self) { i in
+                let y = geometry.size.height * Double(i) / 4.0
+                Path { path in
+                    path.move(to: CGPoint(x: 0, y: y))
+                    path.addLine(to: CGPoint(x: geometry.size.width, y: y))
+                }
+                .stroke(Color.durabilitySecondaryText.opacity(0.2), lineWidth: 0.5)
+            }
+            
+            // Y-axis labels
+            ForEach(0..<5, id: \.self) { i in
+                let y = geometry.size.height * Double(i) / 4.0
+                let value = 100 - (Double(i) * 25)
+                
+                Text("\(Int(value))")
+                    .font(.caption2)
+                    .foregroundColor(.durabilitySecondaryText)
+                    .position(x: 20, y: y)
+            }
+        }
     }
 }
 

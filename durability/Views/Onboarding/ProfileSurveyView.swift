@@ -134,6 +134,8 @@ struct ProfileSurveyView: View {
                                     )
                                     .foregroundColor(.durabilityPrimaryText)
                                     .focused($isTextFieldFocused)
+                                    .scrollContentBackground(.hidden) // Hide default white background
+                                    .background(Color.durabilityCardBackground) // Ensure background is applied
                                 
                             case .slider:
                                 VStack(spacing: 12) {

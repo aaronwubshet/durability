@@ -194,20 +194,15 @@ struct AccountCreationView: View {
             
             VStack(spacing: 20) {
                 if isSignUp {
-                    TextField("First Name", text: $firstName)
-                        .textFieldStyle(DurabilityTextFieldStyle())
-                    
-                    TextField("Last Name", text: $lastName)
-                        .textFieldStyle(DurabilityTextFieldStyle())
+                    CustomPlaceholderTextField(placeholder: "First Name", text: $firstName)
+                    CustomPlaceholderTextField(placeholder: "Last Name", text: $lastName)
                 }
                 
-                TextField("Email", text: $email)
-                    .textFieldStyle(DurabilityTextFieldStyle())
+                CustomPlaceholderTextField(placeholder: "Email address", text: $email)
                     .keyboardType(.emailAddress)
                     .autocapitalization(.none)
                 
-                SecureField("Password", text: $password)
-                    .textFieldStyle(DurabilityTextFieldStyle())
+                CustomPlaceholderSecureField(placeholder: "Password", text: $password)
             }
             
             Spacer()
@@ -252,11 +247,88 @@ struct AccountCreationView: View {
     }
 }
 
-// MARK: - Custom Text Field Style
+// MARK: - Placeholder Style Modifier
 
-struct DurabilityTextFieldStyle: TextFieldStyle {
-    func _body(configuration: TextField<Self._Label>) -> some View {
-        configuration
+struct PlaceholderStyle: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .foregroundColor(.durabilityPrimaryAccent.opacity(0.8))
+            .italic()
+    }
+}
+
+extension View {
+    func placeholderStyle() -> some View {
+        self.modifier(PlaceholderStyle())
+    }
+}
+
+// MARK: - Custom Text Field Components
+
+struct CustomTextField: View {
+    let placeholder: String
+    @Binding var text: String
+    
+    var body: some View {
+        ZStack(alignment: .leading) {
+            if text.isEmpty {
+                Text(placeholder)
+                    .foregroundColor(.durabilityPrimaryAccent)
+                    .italic()
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+            }
+            
+            TextField("", text: $text)
+                .padding()
+                .background(Color.durabilityCardBackground)
+                .cornerRadius(12)
+                .foregroundColor(.durabilityPrimaryText)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.durabilitySecondaryText.opacity(0.3), lineWidth: 1)
+                )
+                .accentColor(.durabilityPrimaryAccent)
+        }
+    }
+}
+
+struct CustomSecureField: View {
+    let placeholder: String
+    @Binding var text: String
+    
+    var body: some View {
+        ZStack(alignment: .leading) {
+            if text.isEmpty {
+                Text(placeholder)
+                    .foregroundColor(.durabilityPrimaryAccent)
+                    .italic()
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+            }
+            
+            SecureField("", text: $text)
+                .padding()
+                .background(Color.durabilityCardBackground)
+                .cornerRadius(12)
+                .foregroundColor(.durabilityPrimaryText)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.durabilitySecondaryText.opacity(0.3), lineWidth: 1)
+                )
+                .accentColor(.durabilityPrimaryAccent)
+        }
+    }
+}
+
+// MARK: - Custom Placeholder Text Field Components
+
+struct CustomPlaceholderTextField: View {
+    let placeholder: String
+    @Binding var text: String
+    
+    var body: some View {
+        TextField(placeholder, text: $text)
             .padding()
             .background(Color.durabilityCardBackground)
             .cornerRadius(12)
@@ -265,6 +337,25 @@ struct DurabilityTextFieldStyle: TextFieldStyle {
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(Color.durabilitySecondaryText.opacity(0.3), lineWidth: 1)
             )
+            .accentColor(.durabilityPrimaryAccent)
+    }
+}
+
+struct CustomPlaceholderSecureField: View {
+    let placeholder: String
+    @Binding var text: String
+    
+    var body: some View {
+        SecureField(placeholder, text: $text)
+            .padding()
+            .background(Color.durabilityCardBackground)
+            .cornerRadius(12)
+            .foregroundColor(.durabilityPrimaryText)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.durabilitySecondaryText.opacity(0.3), lineWidth: 1)
+            )
+            .accentColor(.durabilityPrimaryAccent)
     }
 }
 

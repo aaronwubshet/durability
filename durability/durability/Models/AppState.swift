@@ -300,13 +300,8 @@ class AppState: ObservableObject {
         qualitativeState.sleepQuality = 7
         demoUser.qualitativeState = qualitativeState
         
-        // Add completed assessments with super metrics
-        let pastAssessments = [
-            createPastAssessment(date: Date().addingTimeInterval(-7*24*3600), durabilityScore: 72),
-            createPastAssessment(date: Date().addingTimeInterval(-14*24*3600), durabilityScore: 68),
-            createPastAssessment(date: Date().addingTimeInterval(-21*24*3600), durabilityScore: 65),
-            createPastAssessment(date: Date().addingTimeInterval(-28*24*3600), durabilityScore: 62)
-        ]
+        // Add completed assessments with super metrics - 1 year of data
+        let pastAssessments = createOneYearAssessmentHistory()
         
         // Set super metrics for current state (improving over time)
         demoUser.superMetrics = SuperMetricScores(
@@ -361,6 +356,64 @@ class AppState: ObservableObject {
         )
         
         return assessment
+    }
+    
+    private func createOneYearAssessmentHistory() -> [AssessmentResult] {
+        var assessments: [AssessmentResult] = []
+        let calendar = Calendar.current
+        let today = Date()
+        
+        // Create 12 months of data with realistic progress
+        for month in 0..<12 {
+            let assessmentDate = calendar.date(byAdding: .month, value: -month, to: today) ?? today
+            
+            // Realistic progress curve - starts low, improves steadily, plateaus slightly
+            let progressFactor = Double(month) / 11.0 // 0 to 1 over the year
+            let baseScore = 45.0 + (progressFactor * 35.0) // 45 to 80 over the year
+            
+            // Add some realistic variation
+            let variation = Double.random(in: -3...3)
+            let durabilityScore = max(40, min(85, baseScore + variation))
+            
+            // Create super metrics with realistic correlations
+            let baseMetrics = durabilityScore / 100.0
+            
+            // Each metric has its own progression pattern
+            let rangeOfMotion = baseMetrics + (progressFactor * 0.15) + Double.random(in: -0.05...0.05)
+            let flexibility = baseMetrics + (progressFactor * 0.12) + Double.random(in: -0.05...0.05)
+            let mobility = baseMetrics + (progressFactor * 0.18) + Double.random(in: -0.05...0.05)
+            let functionalStrength = baseMetrics + (progressFactor * 0.20) + Double.random(in: -0.05...0.05)
+            let aerobicCapacity = baseMetrics + (progressFactor * 0.10) + Double.random(in: -0.05...0.05)
+            
+            var assessment = AssessmentResult()
+            assessment.date = assessmentDate
+            assessment.durabilityScore = durabilityScore
+            assessment.superMetrics = SuperMetricScores(
+                rangeOfMotion: max(0.3, min(0.95, rangeOfMotion)),
+                flexibility: max(0.3, min(0.95, flexibility)),
+                mobility: max(0.3, min(0.95, mobility)),
+                functionalStrength: max(0.3, min(0.95, functionalStrength)),
+                aerobicCapacity: max(0.3, min(0.95, aerobicCapacity))
+            )
+            
+            // Add exercise results
+            let exercises = [
+                "Overhead Squat", "Single Leg Balance", "Hip Hinge", 
+                "Shoulder Mobility", "Core Stability", "Thoracic Extension",
+                "Ankle Mobility", "Hip Flexor Stretch", "Wall Slide"
+            ]
+            
+            assessment.exercises = exercises.map { exerciseName in
+                var result = ExerciseResult(exerciseName: exerciseName)
+                result.isCompleted = true
+                return result
+            }
+            
+            assessments.append(assessment)
+        }
+        
+        // Sort by date (oldest first)
+        return assessments.sorted { $0.date < $1.date }
     }
 }
 

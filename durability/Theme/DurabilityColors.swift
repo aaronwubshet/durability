@@ -68,4 +68,38 @@ extension LinearGradient {
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
+}
+
+// MARK: - Text Field Styles
+
+struct DurabilityTextFieldStyle: TextFieldStyle {
+    func _body(configuration: TextField<Self._Label>) -> some View {
+        configuration
+            .padding()
+            .background(Color.durabilityCardBackground)
+            .cornerRadius(12)
+            .foregroundColor(.durabilityPrimaryText)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.durabilitySecondaryText.opacity(0.3), lineWidth: 1)
+            )
+            .accentColor(.durabilityPrimaryAccent)
+            .tint(.durabilityPrimaryAccent) // This helps with placeholder visibility
+    }
+}
+
+struct CustomDurabilityTextFieldStyle: TextFieldStyle {
+    func _body(configuration: TextField<Self._Label>) -> some View {
+        configuration
+            .padding()
+            .background(Color.durabilityCardBackground)
+            .cornerRadius(12)
+            .foregroundColor(.durabilityPrimaryText)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.durabilitySecondaryText.opacity(0.3), lineWidth: 1)
+            )
+            .accentColor(.durabilityPrimaryAccent)
+            .tint(.durabilityPrimaryAccent) // This helps with placeholder visibility
+    }
 } 
