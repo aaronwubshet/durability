@@ -172,6 +172,7 @@ struct OnboardingFeatureRow: View {
 struct AccountCreationView: View {
     @ObservedObject var appState: AppState
     @Binding var currentStep: OnboardingStep
+    @StateObject private var authManager = AuthenticationManager.shared
     @State private var email = ""
     @State private var firstName = ""
     @State private var lastName = ""
@@ -190,6 +191,62 @@ struct AccountCreationView: View {
                     .font(.subheadline)
                     .foregroundColor(.durabilitySecondaryText)
                     .multilineTextAlignment(.center)
+            }
+            
+            // Apple Sign In Button
+            VStack(spacing: 16) {
+                Button(action: {
+                    Task {
+                        await authManager.signInWithApple()
+                    }
+                }) {
+                    HStack {
+                        Image(systemName: "applelogo")
+                            .font(.title2)
+                        
+                        Text("Sign in with Apple")
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(Color.black)
+                    .cornerRadius(16)
+                }
+                .disabled(authManager.isLoading)
+                
+                if authManager.isLoading {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                        .accentColor(.durabilityPrimaryAccent)
+                }
+                
+                if let errorMessage = authManager.errorMessage {
+                    Text(errorMessage)
+                        .font(.caption)
+                        .foregroundColor(.red)
+                        .multilineTextAlignment(.center)
+                        .padding()
+                        .background(Color.durabilityCardBackground.opacity(0.5))
+                        .cornerRadius(8)
+                }
+                
+                // Divider
+                HStack {
+                    Rectangle()
+                        .frame(height: 1)
+                        .foregroundColor(.durabilitySecondaryText.opacity(0.3))
+                    
+                    Text("or")
+                        .font(.caption)
+                        .foregroundColor(.durabilitySecondaryText)
+                        .padding(.horizontal, 16)
+                    
+                    Rectangle()
+                        .frame(height: 1)
+                        .foregroundColor(.durabilitySecondaryText.opacity(0.3))
+                }
             }
             
             VStack(spacing: 20) {
@@ -244,6 +301,28 @@ struct AccountCreationView: View {
             .padding(.bottom)
         }
         .padding(.horizontal)
+    }
+    
+    private func signInWithApple() async {
+        await authManager.signInWithApple()
+        
+        // If Apple Sign In was successful, update AppState and continue
+        if authManager.errorMessage == nil {
+            // Create a user profile for the AppState
+            let user = UserProfile(
+                email: "apple.user@durability.com", // Will be updated with actual email
+                firstName: "Apple",
+                lastName: "User"
+            )
+            
+            appState.currentUser = user
+            appState.isAuthenticated = true
+            
+            // Continue to the next onboarding step
+            withAnimation {
+                currentStep = .profileSurvey
+            }
+        }
     }
 }
 

@@ -6,6 +6,15 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		D92C4E1E2E43192900021330 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = D92C4E1D2E43192900021330 /* Auth */; };
+		D92C4E202E43192900021330 /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = D92C4E1F2E43192900021330 /* Functions */; };
+		D92C4E222E43192900021330 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = D92C4E212E43192900021330 /* PostgREST */; };
+		D92C4E242E43192900021330 /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = D92C4E232E43192900021330 /* Realtime */; };
+		D92C4E262E43192900021330 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = D92C4E252E43192900021330 /* Storage */; };
+		D9B9F0692E431EB300C23BDD /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = D9B9F0682E431EB300C23BDD /* Supabase */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		D928A4492E36B2C5002DB9CA /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -29,9 +38,22 @@
 		D928A4522E36B2C5002DB9CA /* durabilityUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = durabilityUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		D989EBCC2E42F66A00DD922C /* Exceptions for "durability" folder in "durability" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D928A43A2E36B2C4002DB9CA /* durability */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		D928A43D2E36B2C4002DB9CA /* durability */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D989EBCC2E42F66A00DD922C /* Exceptions for "durability" folder in "durability" target */,
+			);
 			path = durability;
 			sourceTree = "<group>";
 		};
@@ -52,6 +74,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D92C4E222E43192900021330 /* PostgREST in Frameworks */,
+				D92C4E202E43192900021330 /* Functions in Frameworks */,
+				D9B9F0692E431EB300C23BDD /* Supabase in Frameworks */,
+				D92C4E1E2E43192900021330 /* Auth in Frameworks */,
+				D92C4E262E43192900021330 /* Storage in Frameworks */,
+				D92C4E242E43192900021330 /* Realtime in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +140,12 @@
 			);
 			name = durability;
 			packageProductDependencies = (
+				D92C4E1D2E43192900021330 /* Auth */,
+				D92C4E1F2E43192900021330 /* Functions */,
+				D92C4E212E43192900021330 /* PostgREST */,
+				D92C4E232E43192900021330 /* Realtime */,
+				D92C4E252E43192900021330 /* Storage */,
+				D9B9F0682E431EB300C23BDD /* Supabase */,
 			);
 			productName = durability;
 			productReference = D928A43B2E36B2C4002DB9CA /* durability.app */;
@@ -195,6 +229,9 @@
 			);
 			mainGroup = D928A4322E36B2C4002DB9CA;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				D92C4E1C2E43192900021330 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D928A43C2E36B2C4002DB9CA /* Products */;
 			projectDirPath = "";
@@ -399,6 +436,7 @@
 				DEVELOPMENT_TEAM = 67AH4PN566;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = durability/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -428,8 +466,7 @@
 				DEVELOPMENT_TEAM = 67AH4PN566;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "durability needs access to your health data to provide personalized fitness insights and track your progress.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "durability needs to update your health data to save your workout and fitness information.";
+				INFOPLIST_FILE = durability/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -558,6 +595,50 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		D92C4E1C2E43192900021330 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase-community/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D92C4E1D2E43192900021330 /* Auth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D92C4E1C2E43192900021330 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Auth;
+		};
+		D92C4E1F2E43192900021330 /* Functions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D92C4E1C2E43192900021330 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Functions;
+		};
+		D92C4E212E43192900021330 /* PostgREST */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D92C4E1C2E43192900021330 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = PostgREST;
+		};
+		D92C4E232E43192900021330 /* Realtime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D92C4E1C2E43192900021330 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Realtime;
+		};
+		D92C4E252E43192900021330 /* Storage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D92C4E1C2E43192900021330 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Storage;
+		};
+		D9B9F0682E431EB300C23BDD /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D92C4E1C2E43192900021330 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = D928A4332E36B2C4002DB9CA /* Project object */;
 }
