@@ -122,15 +122,18 @@ struct HealthKitIntegrationView: View {
         healthKitError = nil
         
         if HealthKitManager.shared.checkAvailability() {
-            HealthKitManager.shared.requestAuthorization { success, error in
-                DispatchQueue.main.async {
+            Task { @MainActor in
+                do {
+                    let success = try await HealthKitManager.shared.requestAuthorization()
                     if success {
                         self.healthKitEnabled = true
                         self.appState.onboardingData.healthKitEnabled = true
                         self.proceedToNextStep()
                     } else {
-                        self.healthKitError = error?.localizedDescription ?? "HealthKit authorization denied."
+                        self.healthKitError = "HealthKit authorization denied."
                     }
+                } catch {
+                    self.healthKitError = error.localizedDescription
                 }
             }
         } else {

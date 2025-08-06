@@ -99,6 +99,90 @@ class AuthenticationManager: ObservableObject {
         }
     }
     
+    // MARK: - Email/Password Authentication
+    
+    func signUp(email: String, firstName: String, lastName: String, password: String) async {
+        isLoading = true
+        errorMessage = nil
+        
+        NSLog("📧 Starting email/password sign up...")
+        
+        do {
+            // Sign up with Supabase
+            let authResponse = try await supabase.auth.signUp(
+                email: email,
+                password: password
+            )
+            
+            NSLog("✅ Email/password sign up successful!")
+            
+            // Create user profile
+            await createOrUpdateUserProfile(
+                userId: authResponse.user.id,
+                email: email,
+                firstName: firstName,
+                lastName: lastName
+            )
+            
+            isLoading = false
+            
+        } catch {
+            NSLog("❌ Email/password sign up failed: \(error)")
+            errorMessage = error.localizedDescription
+            isLoading = false
+        }
+    }
+    
+    func signIn(email: String, password: String) async {
+        isLoading = true
+        errorMessage = nil
+        
+        NSLog("📧 Starting email/password sign in...")
+        
+        do {
+            // Sign in with Supabase
+            let authResponse = try await supabase.auth.signIn(
+                email: email,
+                password: password
+            )
+            
+            NSLog("✅ Email/password sign in successful!")
+            
+            // Load existing user profile
+            await loadUserProfile(userId: authResponse.user.id)
+            
+            isLoading = false
+            
+        } catch {
+            NSLog("❌ Email/password sign in failed: \(error)")
+            errorMessage = error.localizedDescription
+            isLoading = false
+        }
+    }
+    
+    private func loadUserProfile(userId: UUID) async {
+        NSLog("👤 Loading user profile for user ID: \(userId)")
+        
+        do {
+            let profile = try await supabase
+                .from("profiles")
+                .select("*")
+                .eq("id", value: userId)
+                .single()
+                .execute()
+            
+            if let profileData = try? JSONDecoder().decode(ProfileData.self, from: profile.data) {
+                NSLog("✅ User profile loaded successfully")
+                // Update the published properties if needed
+                // For now, we'll just log the success
+            } else {
+                NSLog("ℹ️ No user profile found for ID: \(userId)")
+            }
+        } catch {
+            NSLog("❌ Error loading user profile: \(error)")
+        }
+    }
+    
     // MARK: - User Profile Management
     
     private func createOrUpdateUserProfile(userId: UUID, email: String, firstName: String?, lastName: String?) async {

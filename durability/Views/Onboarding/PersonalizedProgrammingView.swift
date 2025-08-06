@@ -105,8 +105,8 @@ struct PersonalizedProgrammingView: View {
     }
     
     private func generateProgram() {
-        // Simulate program generation
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0, execute: DispatchWorkItem {
+        // Generate program immediately
+        Task { @MainActor in
             isGenerating = false
             
             // Generate sample program based on assessment
@@ -137,7 +137,7 @@ struct PersonalizedProgrammingView: View {
                 ],
                 recommendedModules: [RecoveryModule.itBandRecoveryModule]
             )
-        })
+        }
     }
     
     private func completeOnboarding() {

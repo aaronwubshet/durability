@@ -39,42 +39,18 @@ class AppState: ObservableObject {
         // In a real app, this would check iCloud or other auth service
         isLoading = true
         
-        // Simulate network delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+        // Check for existing session
+        Task { @MainActor in
             self.isLoading = false
             // For demo purposes, start with onboarding
             self.isAuthenticated = false
         }
     }
     
-    func signIn(email: String, password: String) {
-        isLoading = true
-        
-        // Simulate authentication
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            self.isLoading = false
-            self.isAuthenticated = true
-            
-            // Check if this is the demo account
-            if email.lowercased() == "demo@durability.com" && password == "demo123" {
-                self.currentUser = self.createDemoUser()
-            } else {
-                // Create a regular user for demo
-                self.currentUser = UserProfile(email: email, firstName: "Demo", lastName: "User")
-            }
-        }
-    }
+    // MARK: - Authentication Methods
     
-    func signUp(email: String, firstName: String, lastName: String, password: String) {
-        isLoading = true
-        
-        // Simulate user creation
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            self.isLoading = false
-            self.isAuthenticated = true
-            self.currentUser = UserProfile(email: email, firstName: firstName, lastName: lastName)
-        }
-    }
+    // Note: These methods are now handled by AuthenticationManager
+    // The real authentication is done through Supabase in OnboardingView
     
     func signOut() {
         isAuthenticated = false

@@ -237,8 +237,10 @@ struct MovementAssessmentView: View {
     private func startRecording() {
         isRecording = true
         
-        // Simulate recording for 3 seconds
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+        // In a real app, this would start actual video recording
+        // For now, we'll simulate a shorter recording time
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
             stopRecording()
         }
     }
@@ -247,8 +249,10 @@ struct MovementAssessmentView: View {
         isRecording = false
         isProcessing = true
         
-        // Simulate processing for 2 seconds
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+        // In a real app, this would process the video
+        // For now, we'll simulate a shorter processing time
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
             isProcessing = false
             
             // Simulate successful completion
@@ -256,9 +260,8 @@ struct MovementAssessmentView: View {
             exerciseResults.append(exerciseResult)
             
             // Auto-progress to next exercise
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                nextExercise()
-            }
+            try? await Task.sleep(nanoseconds: 200_000_000) // 0.2 seconds
+            nextExercise()
         }
     }
     

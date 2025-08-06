@@ -1,6 +1,7 @@
 import Foundation
 import HealthKit
 
+@MainActor
 class HealthKitManager: ObservableObject {
     static let shared = HealthKitManager()
     let healthStore = HKHealthStore()
@@ -31,40 +32,38 @@ class HealthKitManager: ObservableObject {
         return HKHealthStore.isHealthDataAvailable()
     }
 
-    func requestAuthorization(completion: @escaping (Bool, Error?) -> Void) {
+    func requestAuthorization() async throws -> Bool {
         guard checkAvailability() else {
-            DispatchQueue.main.async {
-                completion(false, NSError(domain: "HealthKit", code: 1, userInfo: [NSLocalizedDescriptionKey: "HealthKit is not available on this device"]))
-            }
-            return
+            throw NSError(domain: "HealthKit", code: 1, userInfo: [NSLocalizedDescriptionKey: "HealthKit is not available on this device"])
         }
         
-        healthStore.requestAuthorization(toShare: [], read: readTypes) { success, error in
-            DispatchQueue.main.async {
-                self.isAuthorized = success
-                completion(success, error)
+        return try await withCheckedThrowingContinuation { continuation in
+            healthStore.requestAuthorization(toShare: [], read: readTypes) { success, error in
+                if let error = error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(returning: success)
+                }
             }
         }
     }
 
     // Example: Fetch today's steps
-    func fetchSteps(completion: @escaping (Double) -> Void) {
+    func fetchSteps() async -> Double {
         guard let stepsType = HKQuantityType.quantityType(forIdentifier: .stepCount) else { 
-            DispatchQueue.main.async {
-                completion(0)
-            }
-            return 
+            return 0
         }
         
         let start = Calendar.current.startOfDay(for: Date())
         let predicate = HKQuery.predicateForSamples(withStart: start, end: Date(), options: .strictStartDate)
-        let query = HKStatisticsQuery(quantityType: stepsType, quantitySamplePredicate: predicate, options: .cumulativeSum) { _, result, error in
-            let count = result?.sumQuantity()?.doubleValue(for: .count()) ?? 0
-            DispatchQueue.main.async {
-                completion(count)
+        
+        return await withCheckedContinuation { continuation in
+            let query = HKStatisticsQuery(quantityType: stepsType, quantitySamplePredicate: predicate, options: .cumulativeSum) { _, result, error in
+                let count = result?.sumQuantity()?.doubleValue(for: .count()) ?? 0
+                continuation.resume(returning: count)
             }
+            healthStore.execute(query)
         }
-        healthStore.execute(query)
     }
 
     // Add similar methods for other metrics as needed

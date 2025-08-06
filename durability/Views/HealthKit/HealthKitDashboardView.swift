@@ -56,18 +56,20 @@ struct HealthKitDashboardView: View {
     }
     
     private func checkHealthKitAuthorization() {
-        // Reset error state
         healthKitError = nil
         
         if HealthKitManager.shared.checkAvailability() {
-            HealthKitManager.shared.requestAuthorization { success, error in
-                DispatchQueue.main.async {
+            Task { @MainActor in
+                do {
+                    let success = try await HealthKitManager.shared.requestAuthorization()
                     self.isAuthorized = success
                     if success {
                         self.loadHealthData()
                     } else {
-                        self.healthKitError = error?.localizedDescription ?? "HealthKit authorization denied."
+                        self.healthKitError = "HealthKit authorization denied."
                     }
+                } catch {
+                    self.healthKitError = error.localizedDescription
                 }
             }
         } else {
@@ -81,7 +83,8 @@ struct HealthKitDashboardView: View {
     
     private func loadHealthData() {
         // Example: Fetch steps
-        HealthKitManager.shared.fetchSteps { steps in
+        Task { @MainActor in
+            let steps = await HealthKitManager.shared.fetchSteps()
             healthData.steps = Int(steps)
             // TODO: Fetch other metrics using HealthKitManager
         }

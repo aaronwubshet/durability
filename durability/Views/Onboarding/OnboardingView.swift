@@ -266,26 +266,54 @@ struct AccountCreationView: View {
             
             VStack(spacing: 16) {
                 Button(action: {
-                    if isSignUp {
-                        appState.signUp(email: email, firstName: firstName, lastName: lastName, password: password)
-                    } else {
-                        appState.signIn(email: email, password: password)
-                    }
-                    
-                    withAnimation {
-                        currentStep = .profileSurvey
+                    Task {
+                        if isSignUp {
+                            await authManager.signUp(email: email, firstName: firstName, lastName: lastName, password: password)
+                        } else {
+                            await authManager.signIn(email: email, password: password)
+                        }
+                        
+                        // If authentication was successful, update AppState and continue
+                        if authManager.errorMessage == nil {
+                            // Create a user profile for the AppState
+                            let user = UserProfile(
+                                email: email,
+                                firstName: firstName,
+                                lastName: lastName
+                            )
+                            
+                            appState.currentUser = user
+                            appState.isAuthenticated = true
+                            
+                            NSLog("✅ Email/password authentication successful - proceeding to profile survey")
+                            
+                            // Continue to the next onboarding step
+                            withAnimation {
+                                currentStep = .profileSurvey
+                            }
+                        } else {
+                            NSLog("❌ Email/password authentication failed: \(authManager.errorMessage ?? "Unknown error")")
+                        }
                     }
                 }) {
-                    Text(isSignUp ? "Create Account" : "Sign In")
-                        .font(.title3)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.black)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(Color.durabilityPrimaryAccent)
-                        .cornerRadius(16)
+                    HStack {
+                        if authManager.isLoading {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                                .accentColor(.black)
+                        }
+                        
+                        Text(isSignUp ? "Create Account" : "Sign In")
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                    }
+                    .foregroundColor(.black)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(Color.durabilityPrimaryAccent)
+                    .cornerRadius(16)
                 }
-                .disabled(email.isEmpty || password.isEmpty || (isSignUp && (firstName.isEmpty || lastName.isEmpty)))
+                .disabled(email.isEmpty || password.isEmpty || (isSignUp && (firstName.isEmpty || lastName.isEmpty)) || authManager.isLoading)
                 
                 Button(action: {
                     withAnimation {

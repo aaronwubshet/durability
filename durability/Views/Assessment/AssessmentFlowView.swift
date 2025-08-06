@@ -100,10 +100,8 @@ struct AssessmentFlowView: View {
         
         assessmentResults.append(result)
         
-        // Move to next exercise
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            currentExerciseIndex += 1
-        }
+        // Move to next exercise immediately
+        currentExerciseIndex += 1
     }
     
     private func skipExercise() {
